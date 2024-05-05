@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-    </style>
     <meta charset="UTF-8">
     <title>Competency Wheel</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .details, .tooltip {
+            font-size: 14px;
+            font-family: 'Arial', sans-serif;
+            fill: #333;
+            pointer-events: none;          }
+    </style>
 </head>
 <body>
-    <h1>Competency Coverage Visualisation</h1>
-    <div id="chart"></div>
+    <div style="display: flex; align-items: flex-start;">
+        <div id="chart"></div>
+        <div id="details" style="margin-left: 20px;">
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
