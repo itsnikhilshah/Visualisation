@@ -10,13 +10,26 @@
             font-family: 'Arial', sans-serif;
             fill: #333;
             pointer-events: none;          }
+     
+        #hover-info {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            height: 20px; /* Ensure there's space reserved for hover text */
+        }
+        #click-info {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div style="display: flex; align-items: flex-start;">
         <div id="chart"></div>
-        <div id="details" style="margin-left: 20px;">
-        </div>
+        <div id="hover-info" style="margin-top: 20px; font-size: 16px; font-weight: bold; margin-bottom: 10px;"></div>
+        <div id="click-info" style="margin-top: 20px; font-size: 16px; font-weight: bold;"></div>
     </div>
     <script src="script.js"></script>
 </body>

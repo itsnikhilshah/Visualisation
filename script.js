@@ -13,19 +13,23 @@ const svg = d3.select('#chart')
 
 // Define the data for each segment of the pie
 const data = [
-    { name: "Competency 1", value: 1, imageUrl: 'sample.jpg', linkUrl: 'http://example.com/link1', expanded: false },
-    { name: "Competency 2", value: 1, imageUrl: 'sample2.jpg', linkUrl: 'http://example.com/link2', expanded: false },
-    { name: "Competency 3", value: 1, imageUrl: 'sample3.jpg', linkUrl: 'http://example.com/link3', expanded: false }
+    { name: "Competency 1", value: 1, performance: 1, imageUrl: 'sample1.jpg', linkUrl: 'http://example.com/link1', expanded: false },
+    { name: "Competency 2", value: 1, performance: 4, imageUrl: 'sample2.jpg', linkUrl: 'http://example.com/link2', expanded: false },
+    { name: "Competency 3", value: 1, performance: 2, imageUrl: 'sample3.jpg', linkUrl: 'http://example.com/link3', expanded: false },
+    // More competencies...
 ];
 
-// Set up color scale
-const color = d3.scaleOrdinal(d3.schemeCategory10);
+// Define the performance color scale
+const performanceColorScale = d3.scaleOrdinal()
+    .domain([1, 2, 3, 4])
+    .range(['green', 'yellow', 'orange', 'red']);  // Colors from good to poor performance
 
 // Define the pie layout
 const pie = d3.pie()
-    .value(d => d.value);
+    .value(d => d.value)
+    .sort(null);  // Optionally disable sorting to maintain original order
 
-// Define the arc for regular and hover states
+// Define the arcs for regular and hover states
 const arc = d3.arc()
     .outerRadius(radius - 10)
     .innerRadius(0);
@@ -34,78 +38,52 @@ const arcHover = d3.arc()
     .outerRadius(radius)  // Slightly larger for hover effect
     .innerRadius(0);
 
-const arcExpanded = d3.arc()
-    .outerRadius(radius - 5)  // Even larger for expanded state
-    .innerRadius(0);
-
 // Bind data to paths and create arc groups
 const arcs = svg.selectAll('.arc')
     .data(pie(data))
     .enter().append('g')
     .attr('class', 'arc');
 
-// Append paths to the arcs and set styles and interactions
+// Append paths to the arcs and set initial uniform fill color
 arcs.append('path')
     .attr('d', arc)
-    .attr('fill', d => color(d.data.name))
+    .attr('fill', '#ccc')  // Neutral initial color for all segments
+    .attr('stroke', 'white')
+    .attr('stroke-width', 1)
     .on('mouseover', function (event, d) {
-        console.log("Mouseover event on: ", d.data.name);  // Debugging log
         d3.select(this)
-            .transition()
-            .duration(200)
-            .attr('d', arcHover);
-        
-            const [x, y] = arcHover.centroid(d);
-            d3.select(this.parentNode)  // Append text to the parent group element
-                .append('text')
-                .attr('class', 'tooltip')
-                .attr('x', x)
-                .attr('y', y)
-                .attr('text-anchor', 'middle')
-                .attr('alignment-baseline', 'middle')
-                .style('fill', 'white')  // Set text color to ensure visibility
-                .style('font-size', '14px')
-                .style('pointer-events', 'none')  // Make sure the text doesn't interfere with hover
-                .text(d.data.name);
+            .attr('fill', performanceColorScale(d.data.performance));  // Change fill to performance color on hover
+        d3.select('#hover-info').text(d.data.name);  // Display the name on hover
     })
     .on('mouseout', function (event, d) {
-        console.log("Mouseout event on: ", d.data.name);  // Debugging log
         d3.select(this)
-            .transition()
-            .duration(200)
-            .attr('d', d.data.expanded ? arcExpanded : arc);
-
-        d3.select(this.parentNode).select('.tooltip').remove();
+            .attr('fill', d.data.expanded ? performanceColorScale(d.data.performance) : '#ccc');  // Revert color on mouseout unless clicked
+        d3.select('#hover-info').text('');  // Clear the hover info text
     })
     .on('click', function (event, d) {
-        console.log("Click event on: ", d.data.name);  // Debugging log
-        const thisPath = d3.select(this);
-        const alreadyExpanded = d.data.expanded;
-        svg.selectAll('.arc path').each(function (p) {
-            p.data.expanded = false;
-            d3.select(this).attr('d', arc);
-        });
+        svg.selectAll('.arc path').each(function(p) { p.data.expanded = false; d3.select(this).attr('fill', '#ccc'); });
+        d.data.expanded = true;
+        d3.select(this).attr('fill', performanceColorScale(d.data.performance));  // Highlight clicked segment
 
-        const detailsDiv = d3.select('#details');
-        detailsDiv.html(''); 
-
-        if (!alreadyExpanded) {
-            thisPath
-                .transition()
-                .duration(200)
-                .attr('d', arcExpanded);
-            d.data.expanded = true;
-            detailsDiv.append('img')
+        const detailsDiv = d3.select('#click-info');
+        detailsDiv.html('');  // Clear previous content
+        detailsDiv.append('img')
             .attr('src', d.data.imageUrl)
-            .attr('alt', 'Detail Image for' + d.data.name)
-            .style('width', 'auto')  // Adjust size as needed
+            .attr('alt', 'Detail Image for ' + d.data.name)
+            .style('width', 'auto')
             .style('height', 'auto');
-
-            detailsDiv.append('a')
-                .attr('href', d.data.linkUrl)  // Placeholder link
-                .style('display', 'block')  // Make the link block level to appear below the image
-                .text('More Details about '+ d.data.name);
-        } else {
-            d.data.expanded = false;
-        }
+        detailsDiv.append('a')
+            .attr('href', d.data.linkUrl)
+            .style('display', 'block')
+            .text('More Details about ' + d.data.name);
     });
+
+// Add text labels inside each segment with white text color
+arcs.append('text')
+    .attr('transform', d => `translate(${arc.centroid(d)})`)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', 'middle')
+    .style('fill', 'white')  // Set text color to white
+    .style('font-size', '12px')
+    .style('pointer-events', 'none')
+    .text(d => d.data.name);
